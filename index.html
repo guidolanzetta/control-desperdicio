@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control de Desperdicio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --cream: #FAF6EE;
+    --paper: #FFFFFF;
+    --ink: #2B241C;
+    --ink-soft: #786B5C;
+    --tomato: #C1440E;
+    --tomato-dark: #9A350A;
+    --olive: #5C6B3F;
+    --gold: #D9A441;
+    --line: #E4DACB;
+    --radius: 14px;
+  }
+  /* Modo oscuro: se activa solo cuando el turno detectado es "Noche",
+     pensado para que no moleste la vista en la cocina de noche. */
+  body.dark {
+    --cream: #1B1611;
+    --paper: #241E17;
+    --ink: #F2E8D9;
+    --ink-soft: #B3A38C;
+    --tomato: #E2703B;
+    --tomato-dark: #C1440E;
+    --olive: #8FA05F;
+    --gold: #E0B45C;
+    --line: #3A2F23;
+  }
+  body { transition: background .25s ease, color .25s ease; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  header {
+    padding: 26px 20px 16px;
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+    background: var(--cream);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  header h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 24px;
+    margin: 0 0 2px;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .mode-flag {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    padding: 3px 9px;
+    border-radius: 999px;
+  }
+  .mode-flag.cloud { background: #E4EBDA; color: var(--olive); }
+  .mode-flag.local { background: #F5E3C6; color: #8A5A00; }
+  .mode-flag.pending { background: #F5D6C6; color: #9A350A; }
+  nav.tabs {
+    display: flex;
+    max-width: 640px;
+    margin: 16px auto 0;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px;
+  }
+  nav.tabs button {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 10px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--ink-soft);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  nav.tabs button.active {
+    background: var(--tomato);
+    color: #fff;
+  }
+  main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 20px 16px 60px;
+  }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* --- Entry ticket --- */
+  .ticket {
+    background: var(--paper);
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    padding: 18px 18px 8px;
+    position: relative;
+    margin-bottom: 18px;
+  }
+  .ticket::before {
+    content: "";
+    position: absolute;
+    top: -1px; left: 16px; right: 16px;
+    height: 1px;
+    background-image: linear-gradient(to right, var(--ink-soft) 40%, transparent 0%);
+    background-size: 8px 1px;
+    opacity: .35;
+  }
+  .ticket-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 10px;
+  }
+  .ticket-row label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--ink-soft);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .date-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  input[type="date"], input[type="month"] {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 7px 10px;
+    background: var(--cream);
+    color: var(--ink);
+  }
+  input[type="date"]:disabled {
+    opacity: 1;
+    -webkit-text-fill-color: var(--ink);
+    background: var(--cream);
+  }
+  .lock-note {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+
+  .turno-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--cream);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 9px 10px;
+    margin-bottom: 14px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--ink-soft);
+  }
+  .turno-badge .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--tomato);
+    flex-shrink: 0;
+  }
+  .turno-badge b { color: var(--ink); }
+
+  .day-total {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--olive);
+    font-weight: 700;
+    text-align: right;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--line);
+    margin-bottom: 6px;
+  }
+
+  .item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  .item-row:last-child { border-bottom: none; }
+  .item-name {
+    font-size: 14.5px;
+    line-height: 1.3;
+    padding-right: 10px;
+    font-weight: 500;
+  }
+  .stepper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .stepper button {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--cream);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--tomato);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    user-select: none;
+  }
+  .stepper button:active { background: var(--tomato); color: #fff; }
+  .stepper button.minus { color: var(--ink-soft); }
+  .stepper .count {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 16px;
+    width: 22px;
+    text-align: center;
+  }
+  .count.nonzero { color: var(--tomato); }
+
+  /* feedback táctil al tocar +/- */
+  @keyframes countPulse {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.4); }
+    100% { transform: scale(1); }
+  }
+  .count.pulse { animation: countPulse .25s ease; }
+  @keyframes btnFlash {
+    0% { background: var(--tomato); color: #fff; border-color: var(--tomato); }
+    100% { background: var(--cream); color: var(--tomato); border-color: var(--line); }
+  }
+  .stepper button.minus.flash {
+    animation-name: btnFlashMinus;
+  }
+  @keyframes btnFlashMinus {
+    0% { background: var(--ink-soft); color: #fff; border-color: var(--ink-soft); }
+    100% { background: var(--cream); color: var(--ink-soft); border-color: var(--line); }
+  }
+  .stepper button.flash { animation: btnFlash .25s ease; }
+
+  .save-status {
+    text-align: center;
+    font-size: 12px;
+    color: var(--ink-soft);
+    padding: 10px 0 2px;
+    min-height: 18px;
+  }
+  .save-status.saved { color: var(--olive); font-weight: 700; }
+  .save-status.error { color: var(--tomato); font-weight: 700; }
+
+  .btn-finish {
+    width: 100%;
+    background: var(--olive);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    margin-top: 16px;
+  }
+
+  .category-header {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--tomato);
+    padding: 14px 0 6px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 2px;
+  }
+  .category-header:first-child { padding-top: 2px; }
+
+  #item-list {
+    display: block;
+  }
+  .category-col {
+    min-width: 0;
+  }
+  @media (min-width: 480px) {
+    #item-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 22px;
+      align-items: start;
+    }
+    .category-col:nth-child(2) {
+      border-left: 1px solid var(--line);
+      padding-left: 22px;
+    }
+    .category-col .category-header:first-child { padding-top: 0; }
+  }
+  /* en dos columnas los ítems son más angostos: achicamos un poco el stepper */
+  @media (min-width: 480px) {
+    .item-row { padding: 10px 0; }
+    .item-name { font-size: 13.5px; }
+    .stepper { gap: 7px; }
+    .stepper button { width: 30px; height: 30px; font-size: 16px; }
+    .stepper .count { font-size: 14.5px; width: 18px; }
+  }
+
+  .confirm-screen {
+    display: none;
+    text-align: center;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 44px 20px;
+    animation: confirmIn .3s ease;
+  }
+  .confirm-screen.active { display: block; }
+  @keyframes confirmIn {
+    from { opacity: 0; transform: translateY(6px) scale(.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .confirm-check {
+    font-size: 52px;
+    margin-bottom: 10px;
+  }
+  .confirm-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin-bottom: 6px;
+  }
+  .confirm-sub {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    margin-bottom: 22px;
+  }
+  .btn-edit-back {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  /* --- Summary --- */
+  .summary-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 16px;
+  }
+  .summary-card h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0 0 12px;
+  }
+  .total-stamp {
+    text-align: center;
+    padding: 14px 0 8px;
+  }
+  .total-stamp .n {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 44px;
+    color: var(--tomato-dark);
+    line-height: 1;
+  }
+  .total-stamp .label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+  .vs-prev {
+    text-align: center;
+    font-size: 12.5px;
+    font-weight: 700;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line);
+    color: var(--ink-soft);
+  }
+  .vs-prev.up { color: var(--tomato); }
+  .vs-prev.down { color: var(--olive); }
+  .vs-prev .arrow { font-size: 13px; }
+
+  #daily-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 130px;
+    padding-top: 6px;
+  }
+  .day-bar-wrap {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    min-width: 0;
+    position: relative;
+  }
+  .day-bar {
+    width: 100%;
+    max-width: 14px;
+    background: var(--line);
+    border-radius: 3px 3px 0 0;
+    transition: background .1s;
+  }
+  .day-bar.has-data { background: var(--tomato); }
+  .day-bar.is-max { background: var(--tomato-dark); }
+  .day-bar-label {
+    font-size: 8.5px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .day-bar-wrap:hover .day-bar-tip { display: block; }
+  .day-bar-tip {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: #fff;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 3px 6px;
+    border-radius: 5px;
+    white-space: nowrap;
+    margin-bottom: 4px;
+    z-index: 5;
+  }
+  .top-item-card {
+    background: linear-gradient(135deg, var(--tomato) 0%, var(--tomato-dark) 100%);
+    color: #fff;
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 16px;
+  }
+  .top-item-card .eyebrow {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    opacity: .85;
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+  .top-item-card .name {
+    font-family: 'Fraunces', serif;
+    font-size: 19px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .top-item-card .stat {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    opacity: .95;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--ink-soft);
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  th.num, td.num { text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+  td { padding: 9px 0; border-bottom: 1px dashed var(--line); }
+  tr:last-child td { border-bottom: none; }
+  td.rank {
+    color: var(--ink-soft);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    width: 22px;
+  }
+  .pct-bar-wrap { display:flex; align-items:center; gap:8px; }
+  .pct-bar {
+    flex: 1;
+    height: 5px;
+    background: var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .pct-bar-fill {
+    height: 100%;
+    background: var(--tomato);
+    border-radius: 3px;
+  }
+  .pct-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    width: 34px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .turno-compare {
+    display: flex;
+    gap: 10px;
+  }
+  .turno-compare .box {
+    flex: 1;
+    background: var(--cream);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+  }
+  .turno-compare .box .n {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--tomato-dark);
+  }
+  .turno-compare .box .lbl {
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .weekday-row.max .wname { color: var(--tomato); font-weight: 700; }
+
+  .missing-ok {
+    text-align: center;
+    color: var(--olive);
+    font-weight: 700;
+    font-size: 13.5px;
+    padding: 6px 0;
+  }
+  .missing-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+  .missing-row {
+    background: var(--cream);
+    border: 1px solid var(--line);
+    color: var(--tomato-dark);
+    font-size: 11.5px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 5px 9px;
+    border-radius: 8px;
+  }
+  .missing-more {
+    text-align: center;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin-top: 10px;
+  }
+
+  .btn-primary {
+    width: 100%;
+    background: var(--tomato);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .empty-note {
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 13px;
+    padding: 26px 10px;
+  }
+  .loading-note {
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 13px;
+    padding: 20px 10px;
+  }
+  .error-note {
+    text-align: center;
+    color: var(--tomato);
+    font-size: 13px;
+    padding: 20px 10px;
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🍕 Control de Desperdicio</h1>
+  <p>Cargá lo que se tiró · fin de mes mirá el total</p>
+  <span class="mode-flag" id="mode-flag">Detectando...</span>
+  <nav class="tabs">
+    <button id="tab-cargar" class="active" onclick="switchView('cargar')">Cargar</button>
+    <button id="tab-resumen" onclick="switchView('resumen')">Resumen mensual</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- VISTA CARGA DIARIA -->
+  <section id="view-cargar" class="view active">
+
+    <div class="ticket" id="entry-ticket">
+      <div class="ticket-row">
+        <label>Fecha</label>
+        <div class="date-field">
+          <input type="date" id="date-input" disabled>
+          <span class="lock-note" title="No se pueden editar días anteriores">🔒 hoy</span>
+        </div>
+      </div>
+      <div class="turno-badge">
+        <span class="dot"></span>
+        <span>Turno detectado: <b id="turno-label">–</b></span>
+      </div>
+
+      <div class="day-total" id="day-total">Total del turno: 0</div>
+      <div id="item-list"></div>
+
+      <button class="btn-finish" onclick="finishTurno()">✔️ Terminar carga</button>
+    </div>
+    <div class="save-status" id="save-status">Los cambios se guardan solos.</div>
+
+    <!-- Pantalla de confirmación al terminar -->
+    <div class="confirm-screen" id="confirm-screen">
+      <div class="confirm-check">✔️</div>
+      <div class="confirm-title" id="confirm-title">Turno cargado</div>
+      <div class="confirm-sub" id="confirm-sub">–</div>
+      <button class="btn-edit-back" onclick="backToEdit()">Volver a editar</button>
+    </div>
+  </section>
+
+  <!-- VISTA RESUMEN MENSUAL -->
+  <section id="view-resumen" class="view">
+    <div class="ticket">
+      <div class="ticket-row">
+        <label>Mes</label>
+        <input type="month" id="month-input">
+      </div>
+    </div>
+
+    <div id="summary-loading" class="loading-note">Calculando...</div>
+    <div id="summary-error" class="error-note" style="display:none;"></div>
+
+    <div id="summary-content" style="display:none;">
+      <div class="summary-card">
+        <div class="total-stamp">
+          <div class="n" id="month-total">0</div>
+          <div class="label" id="month-total-label">unidades desperdiciadas</div>
+        </div>
+        <div class="vs-prev" id="vs-prev">–</div>
+      </div>
+
+      <div class="summary-card" id="missing-card">
+        <h3>Turnos sin registrar</h3>
+        <div id="missing-body"></div>
+      </div>
+
+      <div class="top-item-card" id="top-item-card" style="display:none;">
+        <div class="eyebrow">Más desperdicio del mes</div>
+        <div class="name" id="top-item-name">–</div>
+        <div class="stat" id="top-item-stat">–</div>
+      </div>
+
+      <div class="summary-card" id="daily-card">
+        <h3>Evolución diaria</h3>
+        <div id="daily-chart"></div>
+      </div>
+
+      <div class="summary-card" id="summary-table-wrap">
+        <h3>Por producto</h3>
+        <table id="summary-table">
+          <thead>
+            <tr><th></th><th>Producto</th><th class="num">Cant.</th><th style="min-width:90px;">% del total</th></tr>
+          </thead>
+          <tbody id="summary-tbody"></tbody>
+        </table>
+        <div class="empty-note" id="summary-empty" style="display:none;">No hay cargas registradas para este mes todavía.</div>
+      </div>
+
+      <div class="summary-card" id="turno-card">
+        <h3>Por turno</h3>
+        <div class="turno-compare">
+          <div class="box"><div class="n" id="turno-manana-total">0</div><div class="lbl">Mañana</div></div>
+          <div class="box"><div class="n" id="turno-noche-total">0</div><div class="lbl">Noche</div></div>
+        </div>
+      </div>
+
+      <div class="summary-card" id="weekday-card">
+        <h3>Por día de la semana</h3>
+        <table>
+          <tbody id="weekday-tbody"></tbody>
+        </table>
+      </div>
+
+      <button class="btn-primary" onclick="exportExcel()">Descargar Excel del mes</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- Cliente de Supabase (base de datos compartida). Se carga antes que nuestro script. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+<script>
+const CATEGORIES = [
+  {
+    name: "Empanadas",
+    items: [
+      "EMPANADA BROCOLI Y CHAMPI",
+      "EMPANADA CANTIMPALO",
+      "EMPANADA CAPRESSE",
+      "EMPANADA CARNE",
+      "EMPANADA CARNE PICANTE",
+      "EMPANADA CHEESEBURGER",
+      "EMPANADA HUMITA",
+      "EMPANADA JAMON Y QUESO",
+      "EMPANADA POLLO",
+      "EMPANADA ROQUEFOR",
+      "EMPANADA VERDURA",
+    ],
+  },
+  {
+    name: "Pizzas y discos",
+    items: [
+      "Disco molde chico (Sin Muzzarella)",
+      "Disco molde grande (Sin Muzzarella)",
+      "Disco piedra chico (Sin Muzzarella)",
+      "Disco piedra grande (Sin Muzzarella)",
+      "Pizza XL",
+    ],
+  },
+];
+const ITEMS = CATEGORIES.flatMap(c => c.items); // lista plana, usada para totales y export
+
+const WEEKDAYS = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+const SHARED = true; // todos los que abren este link ven y cargan los mismos datos
+
+// TODO el mes se guarda en UNA sola clave de storage (waste:YYYY-MM) para que
+// el resumen mensual se resuelva con una sola lectura, en vez de decenas de
+// pedidos en paralelo (eso era lo que fallaba antes).
+let currentEntries = {};   // { itemName: qty } para fecha+turno actuales
+let currentTurno = 'manana';
+let monthCache = null;     // { "YYYY-MM-DD": { manana:{...}, noche:{...} } }
+let monthCacheKey = null;  // "YYYY-MM" al que corresponde monthCache
+let saveTimer = null;
+
+// ================= BASE DE DATOS (Supabase) =================
+// Mismo proyecto de Supabase que usa "Control de Horarios" — comparten la
+// misma tabla kv_store, pero esta app solo lee/escribe claves que empiezan
+// con "waste:", así que nunca se pisan los datos entre apps.
+const SUPABASE_URL = "https://jkoxjgklsadwcmflgldw.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_plnwV-5Z0hlmCWpQXX8O8Q_gKiqsv-r";
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// --- Capa de guardado con respaldo ---
+// Guardamos en Supabase para que todos los que abren el link vean y carguen
+// los mismos datos. Si se corta el wifi un instante, el cambio se guarda en
+// este dispositivo y se reintenta solo apenas vuelve la conexión.
+const LOCAL_PREFIX = 'desperdicio_pizzeria::';
+let storageMode = 'cloud';
+
+function updateModeFlag() {
+  const el = document.getElementById('mode-flag');
+  const queue = getPendingQueue();
+  const pendingCount = Object.keys(queue).length;
+  if (storageMode === 'cloud') {
+    if (pendingCount > 0) {
+      el.textContent = `Sin conexión · ${pendingCount} cambio${pendingCount === 1 ? '' : 's'} por sincronizar`;
+      el.className = 'mode-flag pending';
+    } else {
+      el.textContent = 'Guardado compartido';
+      el.className = 'mode-flag cloud';
+    }
+  } else {
+    el.textContent = 'Guardado solo en este dispositivo';
+    el.className = 'mode-flag local';
+  }
+}
+
+// --- Cola de reintentos offline ---
+// Si el guardado en la nube falla (por ejemplo, se cortó el wifi), guardamos
+// el cambio localmente y lo dejamos anotado en esta cola. Apenas vuelve la
+// conexión (o cada 30s por las dudas) reintentamos solos, sin que el
+// empleado tenga que hacer nada ni se entere que hubo un corte.
+const PENDING_QUEUE_KEY = LOCAL_PREFIX + '_pendingQueue';
+
+function getPendingQueue() {
+  try { return JSON.parse(localStorage.getItem(PENDING_QUEUE_KEY) || '{}'); }
+  catch (e) { return {}; }
+}
+
+function setPendingQueue(q) {
+  localStorage.setItem(PENDING_QUEUE_KEY, JSON.stringify(q));
+  updateModeFlag();
+}
+
+async function retryPendingQueue() {
+  const queue = getPendingQueue();
+  const keys = Object.keys(queue);
+  if (keys.length === 0) return;
+  for (const key of keys) {
+    try {
+      const { error } = await sb.from('kv_store').upsert({ key, value: JSON.parse(queue[key]) });
+      if (error) throw error;
+      delete queue[key];
+    } catch (e) {
+      // sigue sin conexión, lo dejamos en la cola para el próximo intento
+    }
+  }
+  setPendingQueue(queue);
+}
+
+async function storageSet(key, valueObj) {
+  const str = JSON.stringify(valueObj);
+  localStorage.setItem(LOCAL_PREFIX + key, str);
+  try {
+    const { error } = await sb.from('kv_store').upsert({ key, value: valueObj });
+    if (error) throw error;
+    const queue = getPendingQueue();
+    if (queue[key]) { delete queue[key]; setPendingQueue(queue); }
+    storageMode = 'cloud';
+    updateModeFlag();
+  } catch (e) {
+    console.warn('No se pudo guardar en la nube (¿sin conexión?), queda pendiente de sincronizar:', e);
+    const queue = getPendingQueue();
+    queue[key] = str;
+    setPendingQueue(queue);
+  }
+}
+
+async function storageGet(key) {
+  const queue = getPendingQueue();
+  if (queue[key]) {
+    try { return JSON.parse(queue[key]); } catch (e) { /* sigue abajo */ }
+  }
+  try {
+    const { data, error } = await sb.from('kv_store').select('value').eq('key', key).maybeSingle();
+    if (error) throw error;
+    const value = (data && data.value) ? data.value : {};
+    localStorage.setItem(LOCAL_PREFIX + key, JSON.stringify(value));
+    storageMode = 'cloud';
+    updateModeFlag();
+    return value;
+  } catch (e) {
+    const raw = localStorage.getItem(LOCAL_PREFIX + key);
+    return raw ? JSON.parse(raw) : {};
+  }
+}
+
+window.addEventListener('online', retryPendingQueue);
+setInterval(retryPendingQueue, 30000);
+
+function todayStr() {
+  const d = new Date();
+  const tz = d.getTimezoneOffset() * 60000;
+  return new Date(d - tz).toISOString().slice(0,10);
+}
+
+function currentMonthStr() { return todayStr().slice(0,7); }
+
+function turnoForNow() {
+  const h = new Date().getHours();
+  return (h >= 9 && h < 18) ? 'manana' : 'noche';
+}
+
+function turnoLabel(t) {
+  return t === 'manana' ? 'Mañana (9:00–18:00)' : 'Noche (18:00–23:30)';
+}
+
+function pad2(n) { return String(n).padStart(2,'0'); }
+function monthKeyOf(dateStr) { return `waste:${dateStr.slice(0,7)}`; }
+
+function switchView(name) {
+  document.getElementById('view-cargar').classList.toggle('active', name === 'cargar');
+  document.getElementById('view-resumen').classList.toggle('active', name === 'resumen');
+  document.getElementById('tab-cargar').classList.toggle('active', name === 'cargar');
+  document.getElementById('tab-resumen').classList.toggle('active', name === 'resumen');
+  if (name === 'resumen') loadSummary();
+}
+
+// La fecha de carga queda bloqueada en "hoy": no se puede volver atrás a
+// editar días ya pasados. Si la app queda abierta y cruza la medianoche,
+// esto la actualiza sola al nuevo día.
+function enforceToday() {
+  const t = todayStr();
+  const input = document.getElementById('date-input');
+  if (input.value !== t) {
+    input.value = t;
+    loadEntry();
+  }
+}
+setInterval(enforceToday, 60000);
+
+function updateTurnoBadge() {
+  currentTurno = turnoForNow();
+  document.getElementById('turno-label').textContent = turnoLabel(currentTurno);
+  document.body.classList.toggle('dark', currentTurno === 'noche');
+}
+
+function renderItemList() {
+  const list = document.getElementById('item-list');
+  list.innerHTML = '';
+  CATEGORIES.forEach(cat => {
+    const col = document.createElement('div');
+    col.className = 'category-col';
+
+    const header = document.createElement('div');
+    header.className = 'category-header';
+    header.textContent = cat.name;
+    col.appendChild(header);
+
+    cat.items.forEach(name => {
+      const qty = currentEntries[name] || 0;
+      const row = document.createElement('div');
+      row.className = 'item-row';
+      row.innerHTML = `
+        <div class="item-name">${name}</div>
+        <div class="stepper">
+          <button class="minus" onclick="changeQty(event, '${name.replace(/'/g,"\\'")}', -1)">−</button>
+          <span class="count ${qty > 0 ? 'nonzero' : ''}" id="count-${indexOf(name)}">${qty}</span>
+          <button class="plus" onclick="changeQty(event, '${name.replace(/'/g,"\\'")}', 1)">+</button>
+        </div>
+      `;
+      col.appendChild(row);
+    });
+
+    list.appendChild(col);
+  });
+  updateDayTotal();
+}
+
+function indexOf(name) { return ITEMS.indexOf(name); }
+
+function updateDayTotal() {
+  const total = ITEMS.reduce((sum, name) => sum + (currentEntries[name] || 0), 0);
+  const turnoLbl = currentTurno === 'manana' ? 'Mañana' : 'Noche';
+  document.getElementById('day-total').textContent = `Total turno ${turnoLbl}: ${total}`;
+}
+
+async function getMonthData(monthStr, forceRefresh) {
+  if (!forceRefresh && monthCache && monthCacheKey === monthStr) return monthCache;
+  monthCache = await storageGet(`waste:${monthStr}`);
+  monthCacheKey = monthStr;
+  return monthCache;
+}
+
+function pulseEl(el, cls) {
+  el.classList.remove(cls);
+  void el.offsetWidth; // fuerza el reflow para que la animación se reinicie en toques rápidos seguidos
+  el.classList.add(cls);
+}
+
+function changeQty(e, name, delta) {
+  updateTurnoBadge(); // re-detecta el turno por si cambió mientras la app estaba abierta
+  const current = currentEntries[name] || 0;
+  const next = Math.max(0, current + delta);
+  currentEntries[name] = next;
+  const el = document.getElementById(`count-${indexOf(name)}`);
+  el.textContent = next;
+  el.classList.toggle('nonzero', next > 0);
+  pulseEl(el, 'pulse');
+  if (e && e.currentTarget) pulseEl(e.currentTarget, 'flash');
+  updateDayTotal();
+  scheduleSave();
+}
+
+function scheduleSave() {
+  const status = document.getElementById('save-status');
+  status.textContent = 'Guardando...';
+  status.classList.remove('saved','error');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveCurrentEntry, 500);
+}
+
+async function saveCurrentEntry() {
+  const date = document.getElementById('date-input').value;
+  const monthStr = date.slice(0,7);
+  const status = document.getElementById('save-status');
+  try {
+    // releemos el mes por si otro dispositivo guardó algo mientras tanto
+    const data = await getMonthData(monthStr, true);
+    const cleaned = {};
+    Object.entries(currentEntries).forEach(([k,v]) => { if (v > 0) cleaned[k] = v; });
+    if (!data[date]) data[date] = {};
+    data[date][currentTurno] = cleaned;
+    await storageSet(`waste:${monthStr}`, data);
+    monthCache = data;
+    monthCacheKey = monthStr;
+    status.textContent = '✓ Guardado';
+    status.classList.add('saved');
+  } catch (e) {
+    status.textContent = 'Error al guardar. Probá de nuevo.';
+    status.classList.add('error');
+    console.error(e);
+  }
+}
+
+async function finishTurno() {
+  clearTimeout(saveTimer);
+  await saveCurrentEntry();
+  showConfirmation();
+}
+
+function showConfirmation() {
+  const total = ITEMS.reduce((sum, name) => sum + (currentEntries[name] || 0), 0);
+  const turnoLbl = currentTurno === 'manana' ? 'Mañana' : 'Noche';
+  const dateVal = document.getElementById('date-input').value;
+  document.getElementById('confirm-title').textContent = 'Turno cargado';
+  document.getElementById('confirm-sub').textContent =
+    `Turno ${turnoLbl} del ${dateVal} · ${total} unidad${total === 1 ? '' : 'es'} registrada${total === 1 ? '' : 's'}`;
+  document.getElementById('entry-ticket').style.display = 'none';
+  document.getElementById('save-status').style.display = 'none';
+  document.getElementById('confirm-screen').classList.add('active');
+}
+
+function backToEdit() {
+  document.getElementById('confirm-screen').classList.remove('active');
+  document.getElementById('entry-ticket').style.display = 'block';
+  document.getElementById('save-status').style.display = 'block';
+}
+
+async function loadEntry() {
+  updateTurnoBadge();
+  backToEdit();
+  const date = document.getElementById('date-input').value;
+  const monthStr = date.slice(0,7);
+  document.getElementById('save-status').textContent = 'Cargando...';
+  const data = await getMonthData(monthStr, false);
+  currentEntries = (data[date] && data[date][currentTurno]) ? { ...data[date][currentTurno] } : {};
+  renderItemList();
+  document.getElementById('save-status').textContent = 'Los cambios se guardan solos.';
+  document.getElementById('save-status').classList.remove('saved','error');
+}
+
+document.getElementById('date-input').addEventListener('change', loadEntry);
+
+const MONTH_NAMES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+
+function prevMonthStr(monthStr) {
+  const [y, m] = monthStr.split('-').map(Number);
+  const d = new Date(y, m - 2, 1); // m es 1-indexado; m-2 retrocede un mes en índice 0-based
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}`;
+}
+
+function monthNameEs(monthStr) {
+  const [, m] = monthStr.split('-').map(Number);
+  return MONTH_NAMES[m - 1];
+}
+
+function renderDailyChart(dailyTotals, daysInMonth) {
+  const wrap = document.getElementById('daily-chart');
+  wrap.innerHTML = '';
+  const max = Math.max(...dailyTotals.slice(1, daysInMonth + 1), 1);
+  for (let d = 1; d <= daysInMonth; d++) {
+    const qty = dailyTotals[d];
+    const heightPct = Math.max((qty / max) * 100, qty > 0 ? 6 : 2);
+    const isMax = qty > 0 && qty === max;
+    const showLabel = (d === 1 || d === daysInMonth || d % 5 === 0);
+    const barWrap = document.createElement('div');
+    barWrap.className = 'day-bar-wrap';
+    barWrap.innerHTML = `
+      <div class="day-bar-tip">Día ${d}: ${qty}</div>
+      <div class="day-bar ${qty > 0 ? 'has-data' : ''} ${isMax ? 'is-max' : ''}" style="height:${heightPct}%"></div>
+      <div class="day-bar-label">${showLabel ? d : ''}</div>
+    `;
+    wrap.appendChild(barWrap);
+  }
+}
+
+async function renderVsPrevMonth(month, grandTotal) {
+  const el = document.getElementById('vs-prev');
+  const prevMonth = prevMonthStr(month);
+  let prevData = {};
+  try {
+    prevData = await storageGet(`waste:${prevMonth}`);
+  } catch (e) {
+    prevData = {};
+  }
+  let prevTotal = 0;
+  Object.entries(prevData).forEach(([dateStr, turnos]) => {
+    if (!dateStr.startsWith(prevMonth)) return;
+    ['manana','noche'].forEach(turno => {
+      const dayData = turnos[turno];
+      if (!dayData) return;
+      Object.values(dayData).forEach(qty => { prevTotal += qty; });
+    });
+  });
+
+  const prevLabel = monthNameEs(prevMonth);
+  if (prevTotal === 0) {
+    el.className = 'vs-prev';
+    el.textContent = `${prevLabel} no tiene datos cargados para comparar`;
+    return;
+  }
+  const diff = grandTotal - prevTotal;
+  const pct = Math.abs((diff / prevTotal) * 100).toFixed(1);
+  if (diff > 0) {
+    el.className = 'vs-prev up';
+    el.innerHTML = `<span class="arrow">▲</span> ${pct}% más que ${prevLabel} (${prevTotal})`;
+  } else if (diff < 0) {
+    el.className = 'vs-prev down';
+    el.innerHTML = `<span class="arrow">▼</span> ${pct}% menos que ${prevLabel} (${prevTotal})`;
+  } else {
+    el.className = 'vs-prev';
+    el.textContent = `Igual que ${prevLabel} (${prevTotal})`;
+  }
+}
+
+function turnoEndDateTime(dateStr, turno) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return (turno === 'manana')
+    ? new Date(y, m - 1, d, 18, 0, 0)
+    : new Date(y, m - 1, d, 23, 30, 0);
+}
+
+function computeMissingShifts(month, data) {
+  const now = new Date();
+  const [yy, mm] = month.split('-').map(Number);
+  const daysInMonth = new Date(yy, mm, 0).getDate();
+  const missing = [];
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${yy}-${pad2(mm)}-${pad2(d)}`;
+    ['manana', 'noche'].forEach(turno => {
+      if (turnoEndDateTime(dateStr, turno) > now) return; // el turno todavía no terminó, no lo marcamos
+      const hasEntry = data[dateStr] && data[dateStr][turno] !== undefined;
+      if (!hasEntry) missing.push({ dateStr, turno });
+    });
+  }
+  return missing;
+}
+
+function renderMissingShifts(missing) {
+  const body = document.getElementById('missing-body');
+  if (missing.length === 0) {
+    body.innerHTML = '<div class="missing-ok">✓ Todos los turnos vencidos están cargados</div>';
+    return;
+  }
+  const shown = missing.slice(0, 30);
+  const extra = missing.length - shown.length;
+  let html = '<div class="missing-list">';
+  shown.forEach(({ dateStr, turno }) => {
+    const [, m, d] = dateStr.split('-');
+    const turnoLbl = turno === 'manana' ? 'Mañana' : 'Noche';
+    html += `<div class="missing-row">${d}/${m} · ${turnoLbl}</div>`;
+  });
+  html += '</div>';
+  if (extra > 0) html += `<div class="missing-more">+ ${extra} más</div>`;
+  body.innerHTML = html;
+}
+
+// --- Resumen mensual ---
+async function loadSummary() {
+  const month = document.getElementById('month-input').value || currentMonthStr();
+  document.getElementById('month-input').value = month;
+
+  document.getElementById('summary-loading').style.display = 'block';
+  document.getElementById('summary-error').style.display = 'none';
+  document.getElementById('summary-content').style.display = 'none';
+
+  let data = {};
+  try {
+    data = await getMonthData(month, true); // una sola lectura para todo el mes
+  } catch (e) {
+    document.getElementById('summary-loading').style.display = 'none';
+    document.getElementById('summary-error').style.display = 'block';
+    document.getElementById('summary-error').textContent = 'No se pudo leer el resumen. Deslizá para reintentar.';
+    console.error(e);
+    return;
+  }
+
+  const totals = {};
+  ITEMS.forEach(i => totals[i] = 0);
+  let grandTotal = 0;
+  const turnoTotals = { manana: 0, noche: 0 };
+  const weekdayTotals = [0,0,0,0,0,0,0]; // domingo..sabado
+  const [yy, mm] = month.split('-').map(Number);
+  const daysInMonth = new Date(yy, mm, 0).getDate();
+  const dailyTotals = new Array(daysInMonth + 1).fill(0); // índice 1..daysInMonth
+
+  Object.entries(data).forEach(([dateStr, turnos]) => {
+    if (!dateStr.startsWith(month)) return; // por si quedó algo de otro mes en la misma clave
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const weekdayIdx = new Date(y, m - 1, d).getDay();
+    ['manana','noche'].forEach(turno => {
+      const dayData = turnos[turno];
+      if (!dayData) return;
+      Object.entries(dayData).forEach(([item, qty]) => {
+        if (totals.hasOwnProperty(item) && qty > 0) {
+          totals[item] += qty;
+          grandTotal += qty;
+          turnoTotals[turno] += qty;
+          weekdayTotals[weekdayIdx] += qty;
+          dailyTotals[d] += qty;
+        }
+      });
+    });
+  });
+
+  document.getElementById('summary-loading').style.display = 'none';
+  document.getElementById('summary-content').style.display = 'block';
+
+  renderMissingShifts(computeMissingShifts(month, data));
+
+  document.getElementById('month-total').textContent = grandTotal;
+  document.getElementById('month-total-label').textContent = grandTotal === 1 ? 'unidad desperdiciada' : 'unidades desperdiciadas';
+
+  renderDailyChart(dailyTotals, daysInMonth);
+  await renderVsPrevMonth(month, grandTotal);
+
+  const rows = ITEMS.map(i => [i, totals[i]]).filter(r => r[1] > 0).sort((a,b) => b[1]-a[1]);
+
+  const topCard = document.getElementById('top-item-card');
+  if (rows.length > 0 && grandTotal > 0) {
+    const [topName, topQty] = rows[0];
+    const pct = ((topQty / grandTotal) * 100).toFixed(1);
+    document.getElementById('top-item-name').textContent = topName;
+    document.getElementById('top-item-stat').textContent = `${topQty} unidades · ${pct}% del desperdicio del mes`;
+    topCard.style.display = 'block';
+  } else {
+    topCard.style.display = 'none';
+  }
+
+  const tbody = document.getElementById('summary-tbody');
+  const emptyNote = document.getElementById('summary-empty');
+  tbody.innerHTML = '';
+  const table = document.getElementById('summary-table');
+
+  if (rows.length === 0) {
+    table.style.display = 'none';
+    emptyNote.style.display = 'block';
+  } else {
+    table.style.display = 'table';
+    emptyNote.style.display = 'none';
+    rows.forEach(([name, qty], i) => {
+      const pct = grandTotal > 0 ? (qty / grandTotal) * 100 : 0;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="rank">${i+1}</td>
+        <td>${name}</td>
+        <td class="num">${qty}</td>
+        <td>
+          <div class="pct-bar-wrap">
+            <div class="pct-bar"><div class="pct-bar-fill" style="width:${pct.toFixed(1)}%"></div></div>
+            <span class="pct-text">${pct.toFixed(1)}%</span>
+          </div>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  document.getElementById('turno-manana-total').textContent = turnoTotals.manana;
+  document.getElementById('turno-noche-total').textContent = turnoTotals.noche;
+
+  const order = [1,2,3,4,5,6,0]; // lunes..domingo
+  const maxWeekdayQty = Math.max(...weekdayTotals);
+  const weekdayTbody = document.getElementById('weekday-tbody');
+  weekdayTbody.innerHTML = '';
+  order.forEach(idx => {
+    const qty = weekdayTotals[idx];
+    const isMax = qty > 0 && qty === maxWeekdayQty;
+    const tr = document.createElement('tr');
+    tr.className = 'weekday-row' + (isMax ? ' max' : '');
+    tr.innerHTML = `<td class="wname">${WEEKDAYS[idx]}${isMax ? ' 🔥' : ''}</td><td class="num">${qty}</td>`;
+    weekdayTbody.appendChild(tr);
+  });
+
+  window._lastSummary = { rows, month, turnoTotals, weekdayTotals, grandTotal };
+}
+
+document.getElementById('month-input').addEventListener('change', loadSummary);
+
+function exportExcel() {
+  const s = window._lastSummary;
+  if (!s) return;
+
+  const wb = XLSX.utils.book_new();
+
+  // Hoja 1: por producto
+  const productRows = [["Producto", "Cantidad", "% del total"]];
+  s.rows.forEach(([name, qty]) => {
+    const pct = s.grandTotal > 0 ? +((qty / s.grandTotal) * 100).toFixed(1) : 0;
+    productRows.push([name, qty, pct / 100]);
+  });
+  productRows.push(["TOTAL", s.grandTotal, s.grandTotal > 0 ? 1 : 0]);
+  const wsProduct = XLSX.utils.aoa_to_sheet(productRows);
+  wsProduct['!cols'] = [{ wch: 38 }, { wch: 10 }, { wch: 12 }];
+  wsProduct['!autofilter'] = { ref: `A1:C${productRows.length}` };
+  for (let r = 1; r < productRows.length; r++) {
+    const cell = wsProduct[XLSX.utils.encode_cell({ r, c: 2 })];
+    if (cell) cell.z = '0.0%';
+  }
+  XLSX.utils.book_append_sheet(wb, wsProduct, "Por producto");
+
+  // Hoja 2: por turno
+  const turnoRows = [
+    ["Turno", "Cantidad"],
+    ["Mañana (9:00–18:00)", s.turnoTotals.manana],
+    ["Noche (18:00–23:30)", s.turnoTotals.noche],
+    ["TOTAL", s.grandTotal],
+  ];
+  const wsTurno = XLSX.utils.aoa_to_sheet(turnoRows);
+  wsTurno['!cols'] = [{ wch: 22 }, { wch: 10 }];
+  XLSX.utils.book_append_sheet(wb, wsTurno, "Por turno");
+
+  // Hoja 3: por día de la semana
+  const weekdayRows = [["Día", "Cantidad"]];
+  [1,2,3,4,5,6,0].forEach(idx => weekdayRows.push([WEEKDAYS[idx], s.weekdayTotals[idx]]));
+  const wsWeekday = XLSX.utils.aoa_to_sheet(weekdayRows);
+  wsWeekday['!cols'] = [{ wch: 14 }, { wch: 10 }];
+  XLSX.utils.book_append_sheet(wb, wsWeekday, "Por día de semana");
+
+  XLSX.writeFile(wb, `desperdicio_${s.month}.xlsx`);
+}
+
+// init
+(function init() {
+  updateModeFlag();
+  document.getElementById('date-input').value = todayStr();
+  document.getElementById('month-input').value = currentMonthStr();
+  loadEntry();
+  retryPendingQueue(); // por si quedó algo pendiente de una sesión anterior sin conexión
+})();
+</script>
+
+</body>
+</html>
