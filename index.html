@@ -163,6 +163,36 @@
     -webkit-text-fill-color: var(--ink);
     background: var(--cream);
   }
+  .ticket-row select {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 7px 10px;
+    background: var(--cream);
+    color: var(--ink);
+    max-width: 62%;
+  }
+  .btn-clear-filters {
+    display: block;
+    margin: 0 auto 12px;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--tomato);
+    border-radius: 999px;
+    padding: 7px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 12.5px;
+    cursor: pointer;
+  }
+  .scope-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--tomato-dark);
+    margin-top: 6px;
+  }
   .lock-note {
     font-size: 10.5px;
     font-weight: 700;
@@ -171,27 +201,6 @@
     color: var(--ink-soft);
     white-space: nowrap;
   }
-
-  .turno-badge {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    background: var(--cream);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 9px 10px;
-    margin-bottom: 14px;
-    font-size: 12.5px;
-    font-weight: 700;
-    color: var(--ink-soft);
-  }
-  .turno-badge .dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--tomato);
-    flex-shrink: 0;
-  }
-  .turno-badge b { color: var(--ink); }
 
   .day-total {
     font-family: 'JetBrains Mono', monospace;
@@ -204,20 +213,6 @@
     margin-bottom: 6px;
   }
 
-  .item-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 0;
-    border-bottom: 1px dashed var(--line);
-  }
-  .item-row:last-child { border-bottom: none; }
-  .item-name {
-    font-size: 14.5px;
-    line-height: 1.3;
-    padding-right: 10px;
-    font-weight: 500;
-  }
   .stepper {
     display: flex;
     align-items: center;
@@ -281,20 +276,6 @@
   .save-status.saved { color: var(--olive); font-weight: 700; }
   .save-status.error { color: var(--tomato); font-weight: 700; }
 
-  .btn-finish {
-    width: 100%;
-    background: var(--olive);
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    padding: 14px;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 700;
-    font-size: 15px;
-    cursor: pointer;
-    margin-top: 16px;
-  }
-
   .category-header {
     font-family: 'DM Sans', sans-serif;
     font-size: 11.5px;
@@ -308,74 +289,100 @@
   }
   .category-header:first-child { padding-top: 2px; }
 
-  #item-list {
-    display: block;
-  }
-  .category-col {
-    min-width: 0;
-  }
-  @media (min-width: 480px) {
-    #item-list {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      column-gap: 22px;
-      align-items: start;
-    }
-    .category-col:nth-child(2) {
-      border-left: 1px solid var(--line);
-      padding-left: 22px;
-    }
-    .category-col .category-header:first-child { padding-top: 0; }
-  }
-  /* en dos columnas los ítems son más angostos: achicamos un poco el stepper */
-  @media (min-width: 480px) {
-    .item-row { padding: 10px 0; }
-    .item-name { font-size: 13.5px; }
-    .stepper { gap: 7px; }
-    .stepper button { width: 30px; height: 30px; font-size: 16px; }
-    .stepper .count { font-size: 14.5px; width: 18px; }
-  }
-
-  .confirm-screen {
-    display: none;
-    text-align: center;
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 44px 20px;
-    animation: confirmIn .3s ease;
-  }
-  .confirm-screen.active { display: block; }
-  @keyframes confirmIn {
-    from { opacity: 0; transform: translateY(6px) scale(.98); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-  }
-  .confirm-check {
-    font-size: 52px;
-    margin-bottom: 10px;
-  }
-  .confirm-title {
-    font-family: 'Fraunces', serif;
-    font-weight: 700;
-    font-size: 22px;
+  /* --- Selectores de carga (uno por categoría) --- */
+  .picker {
+    padding-bottom: 14px;
+    border-bottom: 1px dashed var(--line);
     margin-bottom: 6px;
   }
-  .confirm-sub {
-    font-size: 13.5px;
-    color: var(--ink-soft);
-    margin-bottom: 22px;
-  }
-  .btn-edit-back {
-    background: transparent;
+  .picker select {
+    width: 100%;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    padding: 12px 10px;
+    margin-top: 8px;
     border: 1px solid var(--line);
-    color: var(--ink-soft);
     border-radius: 10px;
-    padding: 10px 18px;
+    background: var(--cream);
+    color: var(--ink);
+  }
+  .picker-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .picker-row .stepper button { width: 38px; height: 38px; font-size: 20px; }
+  .picker-row .stepper .count { font-size: 18px; width: 26px; }
+  .btn-cargar {
+    flex: 1;
+    background: var(--tomato);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
     font-family: 'DM Sans', sans-serif;
     font-weight: 700;
-    font-size: 13px;
+    font-size: 15px;
     cursor: pointer;
   }
+  .btn-cargar:disabled { opacity: .6; }
+
+  /* --- Lo ya cargado hoy (en gris) --- */
+  .logged-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--ink-soft);
+    padding: 14px 0 6px;
+  }
+  .logged-row {
+    padding: 9px 10px;
+    margin-bottom: 6px;
+    background: var(--cream);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--ink-soft);
+  }
+  .logged-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .logged-name { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 500; line-height: 1.25; }
+  .logged-qty {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+  .logged-loads { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .logged-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    padding: 2px 4px 2px 7px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--paper);
+  }
+  .logged-chip:not(:has(button)) { padding-right: 7px; }
+  .logged-del {
+    border: none;
+    background: transparent;
+    color: var(--ink-soft);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 0 4px;
+  }
+  .logged-empty { font-size: 12.5px; color: var(--ink-soft); padding: 4px 0 2px; }
+
 
   /* --- Summary --- */
   .summary-card {
@@ -656,25 +663,13 @@
           <span class="lock-note" title="No se pueden editar días anteriores">🔒 hoy</span>
         </div>
       </div>
-      <div class="turno-badge">
-        <span class="dot"></span>
-        <span>Turno detectado: <b id="turno-label">–</b></span>
-      </div>
-
-      <div class="day-total" id="day-total">Total del turno: 0</div>
+      <div class="day-total" id="day-total">Total del día: 0</div>
       <div id="item-list"></div>
 
-      <button class="btn-finish" onclick="finishTurno()">✔️ Terminar carga</button>
+      <div class="logged-title">Ya cargado hoy</div>
+      <div id="logged-list"></div>
     </div>
-    <div class="save-status" id="save-status">Los cambios se guardan solos.</div>
-
-    <!-- Pantalla de confirmación al terminar -->
-    <div class="confirm-screen" id="confirm-screen">
-      <div class="confirm-check">✔️</div>
-      <div class="confirm-title" id="confirm-title">Turno cargado</div>
-      <div class="confirm-sub" id="confirm-sub">–</div>
-      <button class="btn-edit-back" onclick="backToEdit()">Volver a editar</button>
-    </div>
+    <div class="save-status" id="save-status">Elegí el gusto, la cantidad y tocá Cargar.</div>
   </section>
 
   <!-- VISTA RESUMEN MENSUAL -->
@@ -684,6 +679,24 @@
         <label>Mes</label>
         <input type="month" id="month-input">
       </div>
+      <div class="ticket-row">
+        <label>Día</label>
+        <select id="weekday-filter">
+          <option value="">Todos los días</option>
+          <option value="1">Todos los lunes</option>
+          <option value="2">Todos los martes</option>
+          <option value="3">Todos los miércoles</option>
+          <option value="4">Todos los jueves</option>
+          <option value="5">Todos los viernes</option>
+          <option value="6">Todos los sábados</option>
+          <option value="0">Todos los domingos</option>
+        </select>
+      </div>
+      <div class="ticket-row">
+        <label>Fecha</label>
+        <input type="date" id="date-filter">
+      </div>
+      <button class="btn-clear-filters" id="clear-filters" style="display:none;" onclick="clearSummaryFilters()">Ver todo el mes</button>
     </div>
 
     <div id="summary-loading" class="loading-note">Calculando...</div>
@@ -694,6 +707,7 @@
         <div class="total-stamp">
           <div class="n" id="month-total">0</div>
           <div class="label" id="month-total-label">unidades desperdiciadas</div>
+          <div class="scope-label" id="scope-label" style="display:none;"></div>
         </div>
         <div class="vs-prev" id="vs-prev">–</div>
       </div>
@@ -704,7 +718,7 @@
       </div>
 
       <div class="top-item-card" id="top-item-card" style="display:none;">
-        <div class="eyebrow">Más desperdicio del mes</div>
+        <div class="eyebrow" id="top-item-eyebrow">Más desperdicio del mes</div>
         <div class="name" id="top-item-name">–</div>
         <div class="stat" id="top-item-stat">–</div>
       </div>
@@ -740,7 +754,7 @@
         </table>
       </div>
 
-      <button class="btn-primary" onclick="exportExcel()">Descargar Excel del mes</button>
+      <button class="btn-primary" id="btn-export" onclick="exportExcel()">Descargar Excel del mes</button>
     </div>
   </section>
 
@@ -754,6 +768,7 @@ const CATEGORIES = [
   {
     name: "Empanadas",
     items: [
+      "EMPANADA BONDIOLA A LA BARBACOA",
       "EMPANADA BROCOLI Y CHAMPI",
       "EMPANADA CANTIMPALO",
       "EMPANADA CAPRESSE",
@@ -786,11 +801,13 @@ const SHARED = true; // todos los que abren este link ven y cargan los mismos da
 // TODO el mes se guarda en UNA sola clave de storage (waste:YYYY-MM) para que
 // el resumen mensual se resuelva con una sola lectura, en vez de decenas de
 // pedidos en paralelo (eso era lo que fallaba antes).
-let currentEntries = {};   // { itemName: qty } para fecha+turno actuales
+// Cada día guarda los totales por turno (manana / noche: { item: qty }) y además
+// un "log" con cada carga individual (hora, turno, item, cantidad) para poder
+// mostrar lo cargado en el día. El resumen mensual solo usa los totales por turno.
 let currentTurno = 'manana';
-let monthCache = null;     // { "YYYY-MM-DD": { manana:{...}, noche:{...} } }
+let monthCache = null;     // { "YYYY-MM-DD": { manana:{...}, noche:{...}, log:[...] } }
 let monthCacheKey = null;  // "YYYY-MM" al que corresponde monthCache
-let saveTimer = null;
+const pickerQty = CATEGORIES.map(() => 1); // cantidad elegida en cada selector
 
 // ================= BASE DE DATOS (Supabase) =================
 // Mismo proyecto de Supabase que usa "Control de Horarios" — comparten la
@@ -892,7 +909,11 @@ async function storageGet(key) {
     return value;
   } catch (e) {
     const raw = localStorage.getItem(LOCAL_PREFIX + key);
-    return raw ? JSON.parse(raw) : {};
+    if (raw) return JSON.parse(raw);
+    // Sin conexión y sin copia en este dispositivo: NO devolvemos "mes vacío".
+    // Cada mes se guarda completo en un solo registro, así que guardar sobre un
+    // mes vacío inventado borraría toda la historia de ese mes en la nube.
+    throw e;
   }
 }
 
@@ -910,10 +931,6 @@ function currentMonthStr() { return todayStr().slice(0,7); }
 function turnoForNow() {
   const h = new Date().getHours();
   return (h >= 9 && h < 18) ? 'manana' : 'noche';
-}
-
-function turnoLabel(t) {
-  return t === 'manana' ? 'Mañana (9:00–18:00)' : 'Noche (18:00–23:30)';
 }
 
 function pad2(n) { return String(n).padStart(2,'0'); }
@@ -936,54 +953,132 @@ function enforceToday() {
   if (input.value !== t) {
     input.value = t;
     loadEntry();
+  } else {
+    updateTurno();
+    renderLoggedToday();
   }
 }
 setInterval(enforceToday, 60000);
 
-function updateTurnoBadge() {
+// El turno ya no se muestra en la pantalla de carga: solo decide en cuál se
+// guarda cada carga (para el resumen mensual) y activa el modo oscuro de noche.
+function updateTurno() {
   currentTurno = turnoForNow();
-  document.getElementById('turno-label').textContent = turnoLabel(currentTurno);
   document.body.classList.toggle('dark', currentTurno === 'noche');
 }
 
-function renderItemList() {
+// Un selector por categoría (empanadas / pizzas): desplegable de gustos,
+// cantidad con +/- y botón Cargar. Se arma una sola vez al iniciar.
+function renderPickers() {
   const list = document.getElementById('item-list');
   list.innerHTML = '';
-  CATEGORIES.forEach(cat => {
-    const col = document.createElement('div');
-    col.className = 'category-col';
+  CATEGORIES.forEach((cat, ci) => {
+    const box = document.createElement('div');
+    box.className = 'picker';
 
     const header = document.createElement('div');
     header.className = 'category-header';
     header.textContent = cat.name;
-    col.appendChild(header);
+    box.appendChild(header);
 
+    const sel = document.createElement('select');
+    sel.id = `sel-${ci}`;
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Elegí qué se desperdició…';
+    sel.appendChild(placeholder);
     cat.items.forEach(name => {
-      const qty = currentEntries[name] || 0;
-      const row = document.createElement('div');
-      row.className = 'item-row';
-      row.innerHTML = `
-        <div class="item-name">${name}</div>
-        <div class="stepper">
-          <button class="minus" onclick="changeQty(event, '${name.replace(/'/g,"\\'")}', -1)">−</button>
-          <span class="count ${qty > 0 ? 'nonzero' : ''}" id="count-${indexOf(name)}">${qty}</span>
-          <button class="plus" onclick="changeQty(event, '${name.replace(/'/g,"\\'")}', 1)">+</button>
-        </div>
-      `;
-      col.appendChild(row);
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      sel.appendChild(opt);
     });
+    box.appendChild(sel);
 
-    list.appendChild(col);
+    const row = document.createElement('div');
+    row.className = 'picker-row';
+    row.innerHTML = `
+      <div class="stepper">
+        <button class="minus" onclick="stepPicker(event, ${ci}, -1)">−</button>
+        <span class="count" id="qty-${ci}">1</span>
+        <button class="plus" onclick="stepPicker(event, ${ci}, 1)">+</button>
+      </div>
+      <button class="btn-cargar" id="btn-cargar-${ci}" onclick="cargarItem(${ci})">Cargar</button>
+    `;
+    box.appendChild(row);
+
+    list.appendChild(box);
   });
+}
+
+function stepPicker(e, ci, delta) {
+  pickerQty[ci] = Math.max(1, pickerQty[ci] + delta);
+  const el = document.getElementById(`qty-${ci}`);
+  el.textContent = pickerQty[ci];
+  pulseEl(el, 'pulse');
+  if (e && e.currentTarget) pulseEl(e.currentTarget, 'flash');
+}
+
+function turnoTotalOf(entries) {
+  return entries ? Object.values(entries).reduce((s, q) => s + q, 0) : 0;
+}
+
+function updateDayTotal() {
+  const date = document.getElementById('date-input').value;
+  const day = monthCache && monthCacheKey === date.slice(0,7) ? monthCache[date] : null;
+  const total = turnoTotalOf(day && day.manana) + turnoTotalOf(day && day.noche);
+  document.getElementById('day-total').textContent = `Total del día: ${total}`;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Lista gris de lo cargado hoy, consolidada: una fila por gusto con el total ya
+// sumado, agrupada por turno. Cada fila muestra debajo las cargas individuales
+// (hora + cantidad) con una ✕ para quitarlas. Lo que se cargó antes de existir
+// el log (solo totales, sin hora) aparece como "sin hora" y no se puede quitar.
+function renderLoggedToday() {
+  const box = document.getElementById('logged-list');
+  const date = document.getElementById('date-input').value;
+  const day = (monthCache && monthCacheKey === date.slice(0,7) && monthCache[date]) || {};
+  const log = Array.isArray(day.log) ? day.log : [];
+  const order = name => { const i = ITEMS.indexOf(name); return i === -1 ? ITEMS.length : i; };
+
+  // Los turnos solo importan para el resumen mensual: acá se junta todo el día.
+  const totals = {};
+  ['manana', 'noche'].forEach(turno => {
+    Object.entries(day[turno] || {}).forEach(([item, qty]) => {
+      if (qty > 0) totals[item] = (totals[item] || 0) + qty;
+    });
+  });
+
+  let html = '';
+  Object.keys(totals).sort((a, b) => order(a) - order(b)).forEach(item => {
+    const loads = log.filter(l => l.item === item);
+    const logged = loads.reduce((s, l) => s + l.qty, 0);
+    const chips = [];
+    if (totals[item] > logged) chips.push(`<span class="logged-chip">sin hora ×${totals[item] - logged}</span>`);
+    loads.forEach(l => chips.push(
+      `<span class="logged-chip">${escapeHtml(l.hora)} ×${l.qty}<button class="logged-del" title="Quitar esta carga" onclick="removeLogged('${l.id}')">✕</button></span>`
+    ));
+    html += `
+      <div class="logged-row">
+        <div class="logged-main">
+          <span class="logged-name">${escapeHtml(item)}</span>
+          <span class="logged-qty">${totals[item]}</span>
+        </div>
+        <div class="logged-loads">${chips.join('')}</div>
+      </div>`;
+  });
+
+  box.innerHTML = html || '<div class="logged-empty">Todavía no se cargó nada hoy.</div>';
   updateDayTotal();
 }
 
-function indexOf(name) { return ITEMS.indexOf(name); }
-
-function updateDayTotal() {
-  const total = ITEMS.reduce((sum, name) => sum + (currentEntries[name] || 0), 0);
-  const turnoLbl = currentTurno === 'manana' ? 'Mañana' : 'Noche';
-  document.getElementById('day-total').textContent = `Total turno ${turnoLbl}: ${total}`;
+function nowHHMM() {
+  const d = new Date();
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }
 
 async function getMonthData(monthStr, forceRefresh) {
@@ -999,86 +1094,94 @@ function pulseEl(el, cls) {
   el.classList.add(cls);
 }
 
-function changeQty(e, name, delta) {
-  updateTurnoBadge(); // re-detecta el turno por si cambió mientras la app estaba abierta
-  const current = currentEntries[name] || 0;
-  const next = Math.max(0, current + delta);
-  currentEntries[name] = next;
-  const el = document.getElementById(`count-${indexOf(name)}`);
-  el.textContent = next;
-  el.classList.toggle('nonzero', next > 0);
-  pulseEl(el, 'pulse');
-  if (e && e.currentTarget) pulseEl(e.currentTarget, 'flash');
-  updateDayTotal();
-  scheduleSave();
-}
-
-function scheduleSave() {
+function setStatus(text, cls) {
   const status = document.getElementById('save-status');
-  status.textContent = 'Guardando...';
+  status.textContent = text;
   status.classList.remove('saved','error');
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(saveCurrentEntry, 500);
+  if (cls) status.classList.add(cls);
 }
 
-async function saveCurrentEntry() {
+// Aplica un cambio sobre los datos del día y lo guarda. Siempre releemos el mes
+// antes de modificar, por si otro dispositivo guardó algo mientras tanto.
+async function mutateToday(apply) {
   const date = document.getElementById('date-input').value;
   const monthStr = date.slice(0,7);
-  const status = document.getElementById('save-status');
+  const data = await getMonthData(monthStr, true);
+  if (!data[date]) data[date] = {};
+  apply(data[date]);
+  await storageSet(`waste:${monthStr}`, data);
+  monthCache = data;
+  monthCacheKey = monthStr;
+  renderLoggedToday();
+}
+
+async function cargarItem(ci) {
+  const sel = document.getElementById(`sel-${ci}`);
+  const item = sel.value;
+  if (!item) {
+    setStatus('Elegí un gusto antes de cargar.', 'error');
+    return;
+  }
+  const qty = pickerQty[ci];
+  updateTurno(); // re-detecta el turno por si cambió mientras la app estaba abierta
+  const turno = currentTurno;
+  const btn = document.getElementById(`btn-cargar-${ci}`);
+  btn.disabled = true;
+  setStatus('Guardando...');
   try {
-    // releemos el mes por si otro dispositivo guardó algo mientras tanto
-    const data = await getMonthData(monthStr, true);
-    const cleaned = {};
-    Object.entries(currentEntries).forEach(([k,v]) => { if (v > 0) cleaned[k] = v; });
-    if (!data[date]) data[date] = {};
-    data[date][currentTurno] = cleaned;
-    await storageSet(`waste:${monthStr}`, data);
-    monthCache = data;
-    monthCacheKey = monthStr;
-    status.textContent = '✓ Guardado';
-    status.classList.add('saved');
+    await mutateToday(day => {
+      if (!day[turno]) day[turno] = {};
+      day[turno][item] = (day[turno][item] || 0) + qty;
+      if (!Array.isArray(day.log)) day.log = [];
+      day.log.push({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        hora: nowHHMM(), turno, item, qty,
+      });
+    });
+    sel.value = '';
+    pickerQty[ci] = 1;
+    document.getElementById(`qty-${ci}`).textContent = 1;
+    setStatus(`✓ Cargado: ${qty} × ${item}`, 'saved');
   } catch (e) {
-    status.textContent = 'Error al guardar. Probá de nuevo.';
-    status.classList.add('error');
+    setStatus('Error al guardar. Probá de nuevo.', 'error');
+    console.error(e);
+  }
+  btn.disabled = false;
+}
+
+async function removeLogged(id) {
+  if (!confirm('¿Quitar esta carga?')) return;
+  setStatus('Guardando...');
+  try {
+    await mutateToday(day => {
+      const i = (day.log || []).findIndex(l => l.id === id);
+      if (i === -1) return;
+      const [entry] = day.log.splice(i, 1);
+      const left = ((day[entry.turno] || {})[entry.item] || 0) - entry.qty;
+      if (left > 0) day[entry.turno][entry.item] = left;
+      else if (day[entry.turno]) delete day[entry.turno][entry.item];
+    });
+    setStatus('✓ Carga quitada', 'saved');
+  } catch (e) {
+    setStatus('Error al guardar. Probá de nuevo.', 'error');
     console.error(e);
   }
 }
 
-async function finishTurno() {
-  clearTimeout(saveTimer);
-  await saveCurrentEntry();
-  showConfirmation();
-}
-
-function showConfirmation() {
-  const total = ITEMS.reduce((sum, name) => sum + (currentEntries[name] || 0), 0);
-  const turnoLbl = currentTurno === 'manana' ? 'Mañana' : 'Noche';
-  const dateVal = document.getElementById('date-input').value;
-  document.getElementById('confirm-title').textContent = 'Turno cargado';
-  document.getElementById('confirm-sub').textContent =
-    `Turno ${turnoLbl} del ${dateVal} · ${total} unidad${total === 1 ? '' : 'es'} registrada${total === 1 ? '' : 's'}`;
-  document.getElementById('entry-ticket').style.display = 'none';
-  document.getElementById('save-status').style.display = 'none';
-  document.getElementById('confirm-screen').classList.add('active');
-}
-
-function backToEdit() {
-  document.getElementById('confirm-screen').classList.remove('active');
-  document.getElementById('entry-ticket').style.display = 'block';
-  document.getElementById('save-status').style.display = 'block';
-}
-
 async function loadEntry() {
-  updateTurnoBadge();
-  backToEdit();
+  updateTurno();
   const date = document.getElementById('date-input').value;
   const monthStr = date.slice(0,7);
   document.getElementById('save-status').textContent = 'Cargando...';
-  const data = await getMonthData(monthStr, false);
-  currentEntries = (data[date] && data[date][currentTurno]) ? { ...data[date][currentTurno] } : {};
-  renderItemList();
-  document.getElementById('save-status').textContent = 'Los cambios se guardan solos.';
-  document.getElementById('save-status').classList.remove('saved','error');
+  try {
+    await getMonthData(monthStr, false);
+  } catch (e) {
+    console.error(e);
+    setStatus('No se pudo leer lo cargado. Revisá la conexión y recargá la página.', 'error');
+    return;
+  }
+  renderLoggedToday();
+  setStatus('Elegí el gusto, la cantidad y tocá Cargar.');
 }
 
 document.getElementById('date-input').addEventListener('change', loadEntry);
@@ -1116,7 +1219,41 @@ function renderDailyChart(dailyTotals, daysInMonth) {
   }
 }
 
-async function renderVsPrevMonth(month, grandTotal) {
+// --- Filtros del resumen: día de la semana (todos los lunes, etc.) o fecha exacta ---
+const WEEKDAYS_PL = ["domingos","lunes","martes","miércoles","jueves","viernes","sábados"];
+
+function getSummaryFilter(month) {
+  const wd = document.getElementById('weekday-filter').value;
+  const dateInput = document.getElementById('date-filter');
+  if (dateInput.value && !dateInput.value.startsWith(month)) dateInput.value = ''; // fecha de otro mes
+  return { weekday: wd === '' ? null : Number(wd), date: dateInput.value || null };
+}
+
+function filterActive(f) { return f.weekday !== null || f.date !== null; }
+
+function dayIncluded(dateStr, f) {
+  if (f.date) return dateStr === f.date;
+  if (f.weekday !== null) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d).getDay() === f.weekday;
+  }
+  return true;
+}
+
+// Cómo se nombra lo filtrado: "del mes", "de los lunes del mes", "del 12 de octubre"
+function scopeText(f, month) {
+  if (f.date) return `del ${Number(f.date.slice(8))} de ${monthNameEs(month)}`;
+  if (f.weekday !== null) return `de los ${WEEKDAYS_PL[f.weekday]} del mes`;
+  return 'del mes';
+}
+
+function clearSummaryFilters() {
+  document.getElementById('weekday-filter').value = '';
+  document.getElementById('date-filter').value = '';
+  loadSummary();
+}
+
+async function renderVsPrevMonth(month, grandTotal, f) {
   const el = document.getElementById('vs-prev');
   const prevMonth = prevMonthStr(month);
   let prevData = {};
@@ -1125,9 +1262,12 @@ async function renderVsPrevMonth(month, grandTotal) {
   } catch (e) {
     prevData = {};
   }
+  // con filtro de día de la semana se compara contra esos mismos días del mes anterior
+  const prevFilter = { weekday: f.weekday, date: null };
   let prevTotal = 0;
   Object.entries(prevData).forEach(([dateStr, turnos]) => {
     if (!dateStr.startsWith(prevMonth)) return;
+    if (!dayIncluded(dateStr, prevFilter)) return;
     ['manana','noche'].forEach(turno => {
       const dayData = turnos[turno];
       if (!dayData) return;
@@ -1135,10 +1275,14 @@ async function renderVsPrevMonth(month, grandTotal) {
     });
   });
 
-  const prevLabel = monthNameEs(prevMonth);
+  const prevLabel = f.weekday !== null
+    ? `los ${WEEKDAYS_PL[f.weekday]} de ${monthNameEs(prevMonth)}`
+    : monthNameEs(prevMonth);
   if (prevTotal === 0) {
     el.className = 'vs-prev';
-    el.textContent = `${prevLabel} no tiene datos cargados para comparar`;
+    el.textContent = f.weekday !== null
+      ? `Sin datos de ${prevLabel} para comparar`
+      : `${prevLabel} no tiene datos cargados para comparar`;
     return;
   }
   const diff = grandTotal - prevTotal;
@@ -1162,13 +1306,14 @@ function turnoEndDateTime(dateStr, turno) {
     : new Date(y, m - 1, d, 23, 30, 0);
 }
 
-function computeMissingShifts(month, data) {
+function computeMissingShifts(month, data, f) {
   const now = new Date();
   const [yy, mm] = month.split('-').map(Number);
   const daysInMonth = new Date(yy, mm, 0).getDate();
   const missing = [];
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = `${yy}-${pad2(mm)}-${pad2(d)}`;
+    if (!dayIncluded(dateStr, f)) continue;
     ['manana', 'noche'].forEach(turno => {
       if (turnoEndDateTime(dateStr, turno) > now) return; // el turno todavía no terminó, no lo marcamos
       const hasEntry = data[dateStr] && data[dateStr][turno] !== undefined;
@@ -1202,6 +1347,14 @@ async function loadSummary() {
   const month = document.getElementById('month-input').value || currentMonthStr();
   document.getElementById('month-input').value = month;
 
+  // la fecha exacta solo puede elegirse dentro del mes mostrado
+  const [fy, fm] = month.split('-').map(Number);
+  const dateFilter = document.getElementById('date-filter');
+  dateFilter.min = `${month}-01`;
+  dateFilter.max = `${month}-${pad2(new Date(fy, fm, 0).getDate())}`;
+  const filter = getSummaryFilter(month);
+  document.getElementById('clear-filters').style.display = filterActive(filter) ? 'block' : 'none';
+
   document.getElementById('summary-loading').style.display = 'block';
   document.getElementById('summary-error').style.display = 'none';
   document.getElementById('summary-content').style.display = 'none';
@@ -1228,6 +1381,7 @@ async function loadSummary() {
 
   Object.entries(data).forEach(([dateStr, turnos]) => {
     if (!dateStr.startsWith(month)) return; // por si quedó algo de otro mes en la misma clave
+    if (!dayIncluded(dateStr, filter)) return;
     const [y, m, d] = dateStr.split('-').map(Number);
     const weekdayIdx = new Date(y, m - 1, d).getDay();
     ['manana','noche'].forEach(turno => {
@@ -1248,13 +1402,25 @@ async function loadSummary() {
   document.getElementById('summary-loading').style.display = 'none';
   document.getElementById('summary-content').style.display = 'block';
 
-  renderMissingShifts(computeMissingShifts(month, data));
+  renderMissingShifts(computeMissingShifts(month, data, filter));
 
+  const active = filterActive(filter);
+  const scope = scopeText(filter, month);
   document.getElementById('month-total').textContent = grandTotal;
   document.getElementById('month-total-label').textContent = grandTotal === 1 ? 'unidad desperdiciada' : 'unidades desperdiciadas';
+  const scopeEl = document.getElementById('scope-label');
+  scopeEl.textContent = active ? scope.charAt(0).toUpperCase() + scope.slice(1) : '';
+  scopeEl.style.display = active ? 'block' : 'none';
+  document.getElementById('btn-export').textContent = active ? 'Descargar Excel de lo filtrado' : 'Descargar Excel del mes';
+
+  // un día puntual no tiene evolución diaria ni comparación; el desglose por día
+  // de la semana tampoco tiene sentido cuando ya se filtró por día
+  document.getElementById('daily-card').style.display = filter.date ? 'none' : 'block';
+  document.getElementById('weekday-card').style.display = active ? 'none' : 'block';
+  document.getElementById('vs-prev').style.display = filter.date ? 'none' : 'block';
 
   renderDailyChart(dailyTotals, daysInMonth);
-  await renderVsPrevMonth(month, grandTotal);
+  if (!filter.date) await renderVsPrevMonth(month, grandTotal, filter);
 
   const rows = ITEMS.map(i => [i, totals[i]]).filter(r => r[1] > 0).sort((a,b) => b[1]-a[1]);
 
@@ -1263,7 +1429,8 @@ async function loadSummary() {
     const [topName, topQty] = rows[0];
     const pct = ((topQty / grandTotal) * 100).toFixed(1);
     document.getElementById('top-item-name').textContent = topName;
-    document.getElementById('top-item-stat').textContent = `${topQty} unidades · ${pct}% del desperdicio del mes`;
+    document.getElementById('top-item-eyebrow').textContent = `Más desperdicio ${scope}`;
+    document.getElementById('top-item-stat').textContent = `${topQty} unidades · ${pct}% del desperdicio ${scope}`;
     topCard.style.display = 'block';
   } else {
     topCard.style.display = 'none';
@@ -1313,10 +1480,24 @@ async function loadSummary() {
     weekdayTbody.appendChild(tr);
   });
 
-  window._lastSummary = { rows, month, turnoTotals, weekdayTotals, grandTotal };
+  const fileSuffix = filter.date ? filter.date.slice(8) : (filter.weekday !== null ? WEEKDAYS_PL[filter.weekday] : '');
+  window._lastSummary = { rows, month, turnoTotals, weekdayTotals, grandTotal, fileSuffix };
 }
 
-document.getElementById('month-input').addEventListener('change', loadSummary);
+// cambiar de mes borra los filtros; elegir un día de la semana borra la fecha y viceversa
+document.getElementById('month-input').addEventListener('change', () => {
+  document.getElementById('weekday-filter').value = '';
+  document.getElementById('date-filter').value = '';
+  loadSummary();
+});
+document.getElementById('weekday-filter').addEventListener('change', () => {
+  document.getElementById('date-filter').value = '';
+  loadSummary();
+});
+document.getElementById('date-filter').addEventListener('change', () => {
+  document.getElementById('weekday-filter').value = '';
+  loadSummary();
+});
 
 function exportExcel() {
   const s = window._lastSummary;
@@ -1358,7 +1539,7 @@ function exportExcel() {
   wsWeekday['!cols'] = [{ wch: 14 }, { wch: 10 }];
   XLSX.utils.book_append_sheet(wb, wsWeekday, "Por día de semana");
 
-  XLSX.writeFile(wb, `desperdicio_${s.month}.xlsx`);
+  XLSX.writeFile(wb, `desperdicio_${s.month}${s.fileSuffix ? '_' + s.fileSuffix : ''}.xlsx`);
 }
 
 // init
@@ -1366,6 +1547,7 @@ function exportExcel() {
   updateModeFlag();
   document.getElementById('date-input').value = todayStr();
   document.getElementById('month-input').value = currentMonthStr();
+  renderPickers();
   loadEntry();
   retryPendingQueue(); // por si quedó algo pendiente de una sesión anterior sin conexión
 })();
