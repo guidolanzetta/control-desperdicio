@@ -575,35 +575,6 @@
   }
   .weekday-row.max .wname { color: var(--tomato); font-weight: 700; }
 
-  .missing-ok {
-    text-align: center;
-    color: var(--olive);
-    font-weight: 700;
-    font-size: 13.5px;
-    padding: 6px 0;
-  }
-  .missing-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 7px;
-  }
-  .missing-row {
-    background: var(--cream);
-    border: 1px solid var(--line);
-    color: var(--tomato-dark);
-    font-size: 11.5px;
-    font-weight: 700;
-    font-family: 'JetBrains Mono', monospace;
-    padding: 5px 9px;
-    border-radius: 8px;
-  }
-  .missing-more {
-    text-align: center;
-    font-size: 11.5px;
-    color: var(--ink-soft);
-    margin-top: 10px;
-  }
-
   .btn-primary {
     width: 100%;
     background: var(--tomato);
@@ -636,6 +607,102 @@
     padding: 20px 10px;
     font-weight: 700;
   }
+
+  /* --- Pantallas con PIN (Resumen y Precios) --- */
+  .lock-box h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 17px;
+    margin: 0 0 4px;
+  }
+  .lock-box p { margin: 0 0 6px; font-size: 13px; color: var(--ink-soft); }
+  .pin-input {
+    width: 100%;
+    margin: 12px 0 10px;
+    padding: 12px;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: .4em;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--cream);
+    color: var(--ink);
+  }
+
+  /* --- Pérdida valorizada por producto --- */
+  .loss-stamp {
+    margin-top: 10px;
+    text-align: center;
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 24px;
+    color: var(--ink);
+  }
+  .loss-stamp small {
+    display: block;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+  .prow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 46px 92px 52px;
+    gap: 8px;
+    padding: 7px 0;
+    border-bottom: 1px dashed var(--line);
+    font-size: 13px;
+  }
+  .prow span:first-child { min-width: 0; overflow-wrap: anywhere; }
+  .prow span:nth-child(2), .prow span:nth-child(4) {
+    text-align: right;
+    color: var(--ink-soft);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .prow span:nth-child(4) { font-size: 11.5px; }
+  .prow b { text-align: right; font-family: 'JetBrains Mono', monospace; }
+  .prow.tot { font-weight: 700; font-size: 14px; border-bottom: 1px solid var(--line); }
+  .prow.tot span:nth-child(2), .prow.tot span:nth-child(4) { color: var(--ink); }
+  .prow.heads span:nth-child(2), .prow.heads span:nth-child(4) { font-family: 'DM Sans', sans-serif; }
+  .prow.heads {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--line);
+  }
+  .loss-note { font-size: 11.5px; color: var(--ink-soft); margin-top: 10px; line-height: 1.4; }
+
+  /* --- Pestaña Precios --- */
+  .precio-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px dashed var(--line);
+    font-size: 13.5px;
+  }
+  .precio-row span { min-width: 0; }
+  .precio-row input {
+    width: 120px;
+    flex: none;
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--cream);
+    color: var(--ink);
+  }
+  .retro-opt { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; color: var(--ink-soft); margin: 14px 0 4px; line-height: 1.35; }
+  .retro-opt input { margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -646,7 +713,8 @@
   <span class="mode-flag" id="mode-flag">Detectando...</span>
   <nav class="tabs">
     <button id="tab-cargar" class="active" onclick="switchView('cargar')">Cargar</button>
-    <button id="tab-resumen" onclick="switchView('resumen')">Resumen mensual</button>
+    <button id="tab-resumen" onclick="switchView('resumen')">Resumen</button>
+    <button id="tab-precios" onclick="switchView('precios')">Precios</button>
   </nav>
 </header>
 
@@ -674,6 +742,17 @@
 
   <!-- VISTA RESUMEN MENSUAL -->
   <section id="view-resumen" class="view">
+    <div class="ticket lock-box" id="lock-resumen">
+      <h3>🔒 Resumen mensual</h3>
+      <p>Ingresá el PIN para ver el resumen.</p>
+      <form onsubmit="unlockSecure('resumen', event)">
+        <input class="pin-input" id="pin-resumen" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="········" aria-label="PIN">
+        <button class="btn-primary" type="submit">Entrar</button>
+        <div class="save-status error" id="pin-msg-resumen"></div>
+      </form>
+    </div>
+
+    <div id="body-resumen" style="display:none;">
     <div class="ticket">
       <div class="ticket-row">
         <label>Mes</label>
@@ -709,18 +788,22 @@
           <div class="label" id="month-total-label">unidades desperdiciadas</div>
           <div class="scope-label" id="scope-label" style="display:none;"></div>
         </div>
+        <div class="loss-stamp"><span id="month-loss">–</span><small id="month-loss-label">perdidos en plata</small></div>
         <div class="vs-prev" id="vs-prev">–</div>
-      </div>
-
-      <div class="summary-card" id="missing-card">
-        <h3>Turnos sin registrar</h3>
-        <div id="missing-body"></div>
       </div>
 
       <div class="top-item-card" id="top-item-card" style="display:none;">
         <div class="eyebrow" id="top-item-eyebrow">Más desperdicio del mes</div>
         <div class="name" id="top-item-name">–</div>
         <div class="stat" id="top-item-stat">–</div>
+      </div>
+
+      <div class="summary-card" id="loss-card">
+        <h3>Cuánto se perdió, por producto</h3>
+        <div id="loss-table"></div>
+        <div class="empty-note" id="loss-empty" style="display:none;">No hay cargas registradas para este período.</div>
+        <div class="loss-note" id="loss-note"></div>
+        <button class="btn-primary" id="btn-export-loss" style="margin-top:12px;" onclick="exportLoss()">Exportar a Excel</button>
       </div>
 
       <div class="summary-card" id="daily-card">
@@ -755,6 +838,32 @@
       </div>
 
       <button class="btn-primary" id="btn-export" onclick="exportExcel()">Descargar Excel del mes</button>
+    </div>
+    </div>
+  </section>
+
+  <!-- VISTA PRECIOS (con PIN) -->
+  <section id="view-precios" class="view">
+    <div class="ticket lock-box" id="lock-precios">
+      <h3>🔒 Precios</h3>
+      <p>Ingresá el PIN para ver y cambiar los precios.</p>
+      <form onsubmit="unlockSecure('precios', event)">
+        <input class="pin-input" id="pin-precios" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="········" aria-label="PIN">
+        <button class="btn-primary" type="submit">Entrar</button>
+        <div class="save-status error" id="pin-msg-precios"></div>
+      </form>
+    </div>
+
+    <div id="body-precios" style="display:none;">
+      <div class="ticket">
+        <div class="category-header" style="padding-top:2px;">Precio por unidad</div>
+        <p class="loss-note" style="margin-top:8px;">Lo que cuesta cada unidad (una empanada, un disco). Con esto se calcula cuánto se pierde por desperdicio: unidades tiradas × precio. Los días anteriores conservan el precio que tenían.</p>
+        <div id="precio-list"></div>
+        <label class="retro-opt"><input type="checkbox" id="precio-retro"><span>Corregir también los días anteriores (usalo solo si el precio estaba mal cargado desde el principio)</span></label>
+        <div class="save-status" id="precio-status"></div>
+        <button class="btn-primary" id="btn-guardar-precios" onclick="guardarPrecios()">Guardar precios</button>
+        <div class="loss-note" id="precio-since"></div>
+      </div>
     </div>
   </section>
 
@@ -936,12 +1045,207 @@ function turnoForNow() {
 function pad2(n) { return String(n).padStart(2,'0'); }
 function monthKeyOf(dateStr) { return `waste:${dateStr.slice(0,7)}`; }
 
+// --- Resumen y Precios: bloqueados con PIN ---
+// Un solo PIN abre las dos pantallas. Se vuelven a bloquear al volver a "Cargar",
+// al recargar la página o después de 15 minutos sin tocar nada.
+const SECURE_PIN = '40729349';
+let secureUnlocked = false;
+let secureLast = 0;
+document.addEventListener('pointerdown', () => { if (secureUnlocked) secureLast = Date.now(); });
+document.addEventListener('keydown', () => { if (secureUnlocked) secureLast = Date.now(); });
+setInterval(() => {
+  if (secureUnlocked && Date.now() - secureLast > 15 * 60 * 1000) switchView('cargar');
+}, 30000);
+
+function unlockSecure(which, ev) {
+  ev.preventDefault();
+  const input = document.getElementById(`pin-${which}`);
+  const msg = document.getElementById(`pin-msg-${which}`);
+  if (input.value.trim() === SECURE_PIN) {
+    secureUnlocked = true;
+    secureLast = Date.now();
+    input.value = '';
+    msg.textContent = '';
+    switchView(which);
+  } else {
+    msg.textContent = 'PIN incorrecto.';
+    input.select();
+  }
+}
+
 function switchView(name) {
-  document.getElementById('view-cargar').classList.toggle('active', name === 'cargar');
-  document.getElementById('view-resumen').classList.toggle('active', name === 'resumen');
-  document.getElementById('tab-cargar').classList.toggle('active', name === 'cargar');
-  document.getElementById('tab-resumen').classList.toggle('active', name === 'resumen');
-  if (name === 'resumen') loadSummary();
+  if (name === 'cargar') secureUnlocked = false;
+  ['cargar', 'resumen', 'precios'].forEach(n => {
+    document.getElementById(`view-${n}`).classList.toggle('active', n === name);
+    document.getElementById(`tab-${n}`).classList.toggle('active', n === name);
+  });
+  ['resumen', 'precios'].forEach(n => {
+    document.getElementById(`lock-${n}`).style.display = secureUnlocked ? 'none' : 'block';
+    document.getElementById(`body-${n}`).style.display = secureUnlocked ? 'block' : 'none';
+  });
+  if (name === 'resumen' || name === 'precios') {
+    if (!secureUnlocked) { document.getElementById(`pin-${name}`).focus(); return; }
+    if (name === 'resumen') loadSummary(); else openPrecios();
+  }
+}
+
+// --- Precios por unidad y pérdida valorizada ---
+// Los precios son por UNIDAD (una empanada, un disco). Se guardan con historial
+// ("waste:precios" = { hist: [{ desde, p }] }): cada día se valoriza con los precios
+// que regían ese día, así cambiar un precio hoy no mueve la pérdida de meses anteriores.
+const PRECIOS_KEY = 'waste:precios';
+const BASE_DATE = '2000-01-01';
+const EMP_CAT_ITEMS = CATEGORIES[0].items;
+const PRICE_ROWS = [
+  ['empanada', 'Empanada (todos los sabores)'],
+  ['Disco molde chico (Sin Muzzarella)', 'Disco molde chico'],
+  ['Disco molde grande (Sin Muzzarella)', 'Disco molde grande'],
+  ['Disco piedra chico (Sin Muzzarella)', 'Disco piedra chico'],
+  ['Disco piedra grande (Sin Muzzarella)', 'Disco piedra grande'],
+  ['Pizza XL', 'Pizza XL'],
+];
+const DEFAULT_PRECIOS = {
+  'empanada': 750,
+  'Disco molde chico (Sin Muzzarella)': 2650,
+  'Disco molde grande (Sin Muzzarella)': 4950,
+  'Disco piedra chico (Sin Muzzarella)': 2200,
+  'Disco piedra grande (Sin Muzzarella)': 3850,
+  'Pizza XL': 11500,
+};
+const MONEY = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
+const money = n => '$ ' + MONEY.format(n);
+
+function priceKeyOf(item) { return EMP_CAT_ITEMS.includes(item) ? 'empanada' : item; }
+
+let precioHist = null; // [{ desde, p }] ordenado por fecha; null = no se pudo leer
+
+function mergePrecios(p) {
+  const out = Object.assign({}, DEFAULT_PRECIOS);
+  Object.keys(DEFAULT_PRECIOS).forEach(k => { if (p && typeof p[k] === 'number' && p[k] > 0) out[k] = p[k]; });
+  return out;
+}
+
+function normHist(v) {
+  const hist = (v && Array.isArray(v.hist) ? v.hist : [])
+    .filter(h => h && typeof h.desde === 'string')
+    .map(h => ({ desde: h.desde, p: mergePrecios(h.p) }))
+    .sort((a, b) => a.desde.localeCompare(b.desde));
+  return hist.length ? hist : [{ desde: BASE_DATE, p: mergePrecios(null) }];
+}
+
+async function loadPrecios() {
+  try {
+    precioHist = normHist(await storageGet(PRECIOS_KEY));
+    return true;
+  } catch (e) {
+    precioHist = null;
+    console.error(e);
+    return false;
+  }
+}
+
+// precios vigentes en una fecha (antes de la primera entrada rige la primera)
+function pricesOn(dateStr) {
+  let cur = precioHist[0].p;
+  for (const h of precioHist) { if (h.desde <= dateStr) cur = h.p; }
+  return cur;
+}
+
+const priceInputs = {};
+function priceText(v) { return String(v).replace('.', ','); }
+function parsePrice(s) {
+  const t = s.trim().replace(/\./g, '').replace(',', '.');
+  return t === '' ? NaN : Number(t);
+}
+function setPrecioStatus(text, cls) {
+  const el = document.getElementById('precio-status');
+  el.textContent = text;
+  el.classList.remove('saved', 'error');
+  if (cls) el.classList.add(cls);
+}
+
+async function openPrecios() {
+  setPrecioStatus('Cargando...');
+  document.getElementById('precio-retro').checked = false;
+  const ok = await loadPrecios();
+  const list = document.getElementById('precio-list');
+  list.innerHTML = '';
+  if (!ok) {
+    document.getElementById('btn-guardar-precios').disabled = true;
+    setPrecioStatus('No se pudieron leer los precios. Revisá la conexión y volvé a entrar.', 'error');
+    return;
+  }
+  document.getElementById('btn-guardar-precios').disabled = false;
+  setPrecioStatus('');
+  const last = precioHist[precioHist.length - 1];
+  PRICE_ROWS.forEach(([key, label]) => {
+    const row = document.createElement('div');
+    row.className = 'precio-row';
+    const sp = document.createElement('span');
+    sp.textContent = label;
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.inputMode = 'decimal';
+    inp.autocomplete = 'off';
+    inp.setAttribute('aria-label', 'Precio de ' + label);
+    inp.value = priceText(last.p[key]);
+    inp.addEventListener('input', () => {
+      const clean = inp.value.replace(/[^0-9.,]/g, '');
+      if (clean !== inp.value) inp.value = clean;
+    });
+    inp.addEventListener('focus', () => inp.select());
+    priceInputs[key] = inp;
+    row.append(sp, inp);
+    list.appendChild(row);
+  });
+  document.getElementById('precio-since').textContent = sinceText(last);
+}
+
+function sinceText(entry) {
+  if (entry.desde === BASE_DATE) return 'Estos precios rigen para todos los días, hasta que cambies alguno.';
+  const [y, m, d] = entry.desde.split('-');
+  return `Precios vigentes desde el ${d}/${m}/${y}.`;
+}
+
+async function guardarPrecios() {
+  const next = {};
+  for (const [key, label] of PRICE_ROWS) {
+    const v = parsePrice(priceInputs[key].value);
+    if (!(v > 0)) { setPrecioStatus('Revisá el precio de: ' + label + '.', 'error'); return; }
+    next[key] = v;
+  }
+  const btn = document.getElementById('btn-guardar-precios');
+  btn.disabled = true;
+  setPrecioStatus('Guardando...');
+  try {
+    // se relee antes de escribir; si la lectura falla se corta y no se pisa el historial
+    const ok = await loadPrecios();
+    if (!ok) throw new Error('no se pudo leer');
+    const retro = document.getElementById('precio-retro').checked;
+    const today = todayStr();
+    let hist;
+    if (retro) {
+      hist = [{ desde: BASE_DATE, p: next }];
+    } else {
+      const last = precioHist[precioHist.length - 1];
+      if (Object.keys(next).every(k => next[k] === last.p[k])) {
+        setPrecioStatus('No hay cambios para guardar.');
+        btn.disabled = false;
+        return;
+      }
+      hist = precioHist.slice();
+      if (last.desde === today) hist[hist.length - 1] = { desde: today, p: next };
+      else hist.push({ desde: today, p: next });
+    }
+    await storageSet(PRECIOS_KEY, { hist });
+    precioHist = hist;
+    setPrecioStatus(retro ? '✓ Precios guardados y aplicados a todos los días.' : '✓ Precios guardados. Valen desde hoy; los días anteriores no cambian.', 'saved');
+    document.getElementById('precio-since').textContent = sinceText(hist[hist.length - 1]);
+  } catch (e) {
+    console.error(e);
+    setPrecioStatus('No se pudo guardar. Revisá la conexión y probá de nuevo.', 'error');
+  }
+  btn.disabled = false;
 }
 
 // La fecha de carga queda bloqueada en "hoy": no se puede volver atrás a
@@ -1299,49 +1603,6 @@ async function renderVsPrevMonth(month, grandTotal, f) {
   }
 }
 
-function turnoEndDateTime(dateStr, turno) {
-  const [y, m, d] = dateStr.split('-').map(Number);
-  return (turno === 'manana')
-    ? new Date(y, m - 1, d, 18, 0, 0)
-    : new Date(y, m - 1, d, 23, 30, 0);
-}
-
-function computeMissingShifts(month, data, f) {
-  const now = new Date();
-  const [yy, mm] = month.split('-').map(Number);
-  const daysInMonth = new Date(yy, mm, 0).getDate();
-  const missing = [];
-  for (let d = 1; d <= daysInMonth; d++) {
-    const dateStr = `${yy}-${pad2(mm)}-${pad2(d)}`;
-    if (!dayIncluded(dateStr, f)) continue;
-    ['manana', 'noche'].forEach(turno => {
-      if (turnoEndDateTime(dateStr, turno) > now) return; // el turno todavía no terminó, no lo marcamos
-      const hasEntry = data[dateStr] && data[dateStr][turno] !== undefined;
-      if (!hasEntry) missing.push({ dateStr, turno });
-    });
-  }
-  return missing;
-}
-
-function renderMissingShifts(missing) {
-  const body = document.getElementById('missing-body');
-  if (missing.length === 0) {
-    body.innerHTML = '<div class="missing-ok">✓ Todos los turnos vencidos están cargados</div>';
-    return;
-  }
-  const shown = missing.slice(0, 30);
-  const extra = missing.length - shown.length;
-  let html = '<div class="missing-list">';
-  shown.forEach(({ dateStr, turno }) => {
-    const [, m, d] = dateStr.split('-');
-    const turnoLbl = turno === 'manana' ? 'Mañana' : 'Noche';
-    html += `<div class="missing-row">${d}/${m} · ${turnoLbl}</div>`;
-  });
-  html += '</div>';
-  if (extra > 0) html += `<div class="missing-more">+ ${extra} más</div>`;
-  body.innerHTML = html;
-}
-
 // --- Resumen mensual ---
 async function loadSummary() {
   const month = document.getElementById('month-input').value || currentMonthStr();
@@ -1370,8 +1631,12 @@ async function loadSummary() {
     return;
   }
 
+  const okPrices = await loadPrecios(); // si falla, el resumen sigue pero sin valores en plata
   const totals = {};
-  ITEMS.forEach(i => totals[i] = 0);
+  const moneyBy = {};
+  ITEMS.forEach(i => { totals[i] = 0; moneyBy[i] = 0; });
+  let moneyTotal = 0;
+  const pricesCache = {}; // precios vigentes por fecha
   let grandTotal = 0;
   const turnoTotals = { manana: 0, noche: 0 };
   const weekdayTotals = [0,0,0,0,0,0,0]; // domingo..sabado
@@ -1384,11 +1649,17 @@ async function loadSummary() {
     if (!dayIncluded(dateStr, filter)) return;
     const [y, m, d] = dateStr.split('-').map(Number);
     const weekdayIdx = new Date(y, m - 1, d).getDay();
+    const dayPrices = okPrices ? (pricesCache[dateStr] || (pricesCache[dateStr] = pricesOn(dateStr))) : null;
     ['manana','noche'].forEach(turno => {
       const dayData = turnos[turno];
       if (!dayData) return;
       Object.entries(dayData).forEach(([item, qty]) => {
         if (totals.hasOwnProperty(item) && qty > 0) {
+          if (dayPrices) {
+            const v = qty * dayPrices[priceKeyOf(item)];
+            moneyBy[item] += v;
+            moneyTotal += v;
+          }
           totals[item] += qty;
           grandTotal += qty;
           turnoTotals[turno] += qty;
@@ -1402,8 +1673,6 @@ async function loadSummary() {
   document.getElementById('summary-loading').style.display = 'none';
   document.getElementById('summary-content').style.display = 'block';
 
-  renderMissingShifts(computeMissingShifts(month, data, filter));
-
   const active = filterActive(filter);
   const scope = scopeText(filter, month);
   document.getElementById('month-total').textContent = grandTotal;
@@ -1415,6 +1684,12 @@ async function loadSummary() {
 
   // un día puntual no tiene evolución diaria ni comparación; el desglose por día
   // de la semana tampoco tiene sentido cuando ya se filtró por día
+  document.getElementById('month-loss').textContent = okPrices ? money(moneyTotal) : '–';
+  document.getElementById('month-loss-label').textContent = okPrices
+    ? `perdidos en plata ${scope}`
+    : 'no se pudieron leer los precios';
+  renderLoss(totals, moneyBy, moneyTotal, grandTotal, okPrices);
+
   document.getElementById('daily-card').style.display = filter.date ? 'none' : 'block';
   document.getElementById('weekday-card').style.display = active ? 'none' : 'block';
   document.getElementById('vs-prev').style.display = filter.date ? 'none' : 'block';
@@ -1481,7 +1756,96 @@ async function loadSummary() {
   });
 
   const fileSuffix = filter.date ? filter.date.slice(8) : (filter.weekday !== null ? WEEKDAYS_PL[filter.weekday] : '');
-  window._lastSummary = { rows, month, turnoTotals, weekdayTotals, grandTotal, fileSuffix };
+  window._lastSummary = { rows, month, turnoTotals, weekdayTotals, grandTotal, fileSuffix, totals, moneyBy, moneyTotal, okPrices };
+}
+
+// Tabla de pérdida por producto: unidades, plata perdida y % sobre el total, para
+// poder cruzar lo desperdiciado con lo comprado.
+function prow(cls, a, units, loss, pct) {
+  const r = document.createElement('div');
+  r.className = 'prow' + (cls ? ' ' + cls : '');
+  const x = document.createElement('span'); x.textContent = a;
+  const y = document.createElement('span'); y.textContent = units;
+  const z = document.createElement('b'); z.textContent = loss;
+  const w = document.createElement('span'); w.textContent = pct;
+  r.append(x, y, z, w);
+  return r;
+}
+
+// Filas de la tabla de pérdida (la misma lista alimenta la pantalla y los dos Excel).
+// Cada categoría (empanadas / pizzas y discos) va por separado: su propio total y el
+// % de cada producto es sobre el total de SU categoría, nunca mezclado con la otra.
+// El % es sobre la pérdida en plata; si no hay precios, sobre las unidades.
+function buildLossRows(totals, moneyBy, okPrices) {
+  const rows = [];
+  CATEGORIES.forEach(cat => {
+    const items = cat.items.filter(i => totals[i] > 0);
+    if (!items.length) return;
+    const gUnits = items.reduce((s, i) => s + totals[i], 0);
+    const gMoney = items.reduce((s, i) => s + moneyBy[i], 0);
+    const base = okPrices ? gMoney : gUnits;
+    rows.push({ kind: 'group', name: cat.name, units: gUnits, loss: gMoney });
+    items.forEach(i => rows.push({
+      kind: 'item', name: i, units: totals[i], loss: moneyBy[i],
+      pct: base > 0 ? (okPrices ? moneyBy[i] : totals[i]) / base : 0,
+    }));
+  });
+  return rows;
+}
+
+const PCT = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+function renderLoss(totals, moneyBy, moneyTotal, grandTotal, okPrices) {
+  const host = document.getElementById('loss-table');
+  const empty = document.getElementById('loss-empty');
+  const note = document.getElementById('loss-note');
+  host.innerHTML = '';
+  note.textContent = '';
+  document.getElementById('btn-export-loss').style.display = (grandTotal > 0 && okPrices) ? 'block' : 'none';
+  if (grandTotal === 0) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  const cell = v => okPrices ? money(v) : '–';
+  host.appendChild(prow('heads', 'Producto', 'Unid.', 'Pérdida', '%'));
+  buildLossRows(totals, moneyBy, okPrices).forEach(r => {
+    const item = r.kind === 'item';
+    const name = item ? r.name.replace(' (Sin Muzzarella)', '') : r.name;
+    host.appendChild(prow(item ? '' : 'tot', name, MONEY.format(r.units), cell(r.loss), item ? PCT.format(r.pct * 100) + '%' : ''));
+  });
+  note.textContent = okPrices
+    ? 'Pérdida = unidades × precio de cada día. El % es la parte de cada producto sobre el total de su categoría (empanadas y pizzas/discos van por separado).'
+    : 'Sin precios no se puede calcular la plata; el % es sobre las unidades de cada categoría.';
+}
+
+function lossSheet(s) {
+  const r2 = n => Math.round(n * 100) / 100;
+  // Un bloque por categoría, separados por una fila vacía y cada uno con su total.
+  // El % de cada producto es sobre el total de su categoría.
+  const aoa = [];
+  buildLossRows(s.totals, s.moneyBy, s.okPrices).forEach(r => {
+    if (r.kind === 'group') {
+      if (aoa.length) aoa.push([]);
+      aoa.push([r.name.toUpperCase(), "Unidades", "Pérdida ($)", "% de la categoría"]);
+      aoa.push(["TOTAL " + r.name.toUpperCase(), r.units, r2(r.loss), '']);
+    } else {
+      aoa.push([r.name, r.units, r2(r.loss), r.pct]);
+    }
+  });
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{ wch: 38 }, { wch: 12 }, { wch: 16 }, { wch: 18 }];
+  for (let i = 0; i < aoa.length; i++) {
+    const cell = ws[XLSX.utils.encode_cell({ r: i, c: 3 })];
+    if (cell && typeof cell.v === 'number') cell.z = '0.0%';
+  }
+  return ws;
+}
+
+// Exporta solo la tabla "Cuánto se perdió, por producto" (respeta el filtro elegido)
+function exportLoss() {
+  const s = window._lastSummary;
+  if (!s || !s.okPrices || s.grandTotal === 0) return;
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, lossSheet(s), "Pérdida por producto");
+  XLSX.writeFile(wb, `perdida_${s.month}${s.fileSuffix ? '_' + s.fileSuffix : ''}.xlsx`);
 }
 
 // cambiar de mes borra los filtros; elegir un día de la semana borra la fecha y viceversa
@@ -1504,6 +1868,11 @@ function exportExcel() {
   if (!s) return;
 
   const wb = XLSX.utils.book_new();
+
+  // Hoja valorizada: la misma tabla "Cuánto se perdió, por producto"
+  if (s.okPrices && s.grandTotal > 0) {
+    XLSX.utils.book_append_sheet(wb, lossSheet(s), "Pérdida por producto");
+  }
 
   // Hoja 1: por producto
   const productRows = [["Producto", "Cantidad", "% del total"]];
